@@ -1,33 +1,37 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs')
-let allNotes = require('../../../db/db.json')
+const express = require("express");
+const path = require("path")
+const fs = require("fs");
 
 const server = express();
-const PORT = 3000;
+const port = 3000;
 
-server.use(express.urlencoded({ extended: true }));
+server.use(express.urlencoded({ extended: true }))
 server.use(express.json());
-server.use(express.static(path.join(__dirname, "../../../public")))
+server.use(express.static(path.join(__dirname, "../../../public")));
 
 server.get('/notes', (request, response) => response.sendFile(path.join(__dirname, "../../notes.html")));
 
-server.get('*', (request, response) => response.sendFile(path.join(__dirname, '../../index.html')));
-
-
+server.get('/api/notes', (request, response) => response.sendFile(path.join(__dirname, '../../../db/db.json')));
 
 server.post('/api/notes', (request, response) =>{
 
     let note = request.body
 
-    allNotes.push(note)
+    fs.readFile(path.join(__dirname, "../../../db/db.json"), (error, response)=>{
+        if(error) throw error
+        let addToArray = JSON.parse(response)
+        addToArray.push(note);
 
-    console.log(allNotes)
+        fs.writeFile(path.join(__dirname, "../../../db/db.json"), JSON.stringify(addToArray), (error, response)=>{
+            if(error) throw error
+            console.log(response)
+        } )
+    })
     response.end()
 })
 
-server.get('/api/notes', (request, response) => {
-    response.sendFile(allNotes)
-})
+server.get('*', (request, response) => response.sendFile(path.join(__dirname, '../../index.html')));
 
-server.listen(PORT, () => console.log(`App listening on PORT ${PORT}`));
+server.listen(port, () => {
+  console.log(`app listening on port:${port}`);
+});
